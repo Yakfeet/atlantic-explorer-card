@@ -28,6 +28,8 @@ Heb je een Panasonic monoblock? Daar is een aparte kaart voor: `panasonic-monobl
 3. Plak de URL van deze repository, kies type **Dashboard** en klik **Toevoegen**.
 4. Zoek **Atlantic Explorer Card**, klik **Downloaden** en herlaad de browser (Ctrl+F5).
 
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Yakfeet&repository=atlantic-explorer-card&category=plugin)
+
 ### Handmatig
 
 1. Download `dist/atlantic-explorer-card.js` en zet het in `/config/www/`.
