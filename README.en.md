@@ -69,6 +69,7 @@ entities:
 | `max_temp` | Temperature that counts as "hot" | `60` |
 | `reverse_flow` | Reverses the flow animation in the coil and the air arrows | `false` |
 | `image` | Optional: your own cutaway image instead of the drawing, see below | empty |
+| `element_power` | Power in W above which the electric element counts as active, if you have no `heater` sensor | 800 |
 | `grid_mode` | What input I1 is set to on the water heater: `smart_grid` or `pv_boost`, see below | automatic |
 
 ### Entities
@@ -92,7 +93,7 @@ entities:
 | `sg_1` | Only needed if I1 is wired to a different switch than `pv_boost`. Otherwise leave it out |
 | `sg_2` | Switch of input I2 (Smart Grid only) |
 | `compressor` | Heat pump active on/off. Without it, "active" is derived from power (> 50 W) |
-| `heater` | Electric element on/off |
+| `heater` | Electric element on/off. Without it, "active" is derived from power (> `element_power`, default 800 W) |
 | `defrost` / `online` / `fault` | Defrost, online status and fault |
 | `away` | Away mode |
 | `mode` | Mode (Eco+, Manual, Programmed) |
@@ -202,7 +203,7 @@ Product photos are owned by Atlantic. Do not include them in a public repository
 ## Good to know
 
 - The flow in the coil runs from top to bottom: hot gas enters at the top and leaves at the bottom towards the expansion valve. If it looks reversed on your setup, set `reverse_flow: true`.
-- The "compressor active" state is derived from power if you do not provide a `compressor` sensor.
+- The "compressor active" state is derived from power (> 50 W while the element is off) if you do not provide a `compressor` sensor. The element counts as active above `element_power` (default 800 W) if you do not provide a `heater` sensor. A heat pump usually draws up to about 500 W and the element well over 1 kW; adjust `element_power` if your values differ.
 - An entity that does not exist is silently skipped. If a value stays empty, check that the entity ID is correct.
 
 ## License

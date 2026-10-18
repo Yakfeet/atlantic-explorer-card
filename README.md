@@ -69,6 +69,7 @@ entities:
 | `max_temp` | Temperatuur die als "heet" geldt | `60` |
 | `reverse_flow` | Draait de stroomanimatie in de spiraal en de luchtpijlen om | `false` |
 | `image` | Optioneel: eigen afbeelding van de doorsnede in plaats van de tekening, zie hieronder | leeg |
+| `element_power` | Vermogen in W waarboven het elektrische element als actief geldt, als je geen `heater`-sensor hebt | 800 |
 | `grid_mode` | Waarvoor ingang I1 op de boiler is ingesteld: `smart_grid` of `pv_boost`, zie hieronder | automatisch |
 
 ### Entiteiten
@@ -92,7 +93,7 @@ entities:
 | `sg_1` | Alleen nodig als I1 aan een andere schakelaar hangt dan `pv_boost`. Anders weglaten |
 | `sg_2` | Schakelaar van ingang I2 (alleen Smart Grid) |
 | `compressor` | Warmtepomp actief aan/uit. Zonder deze sensor wordt "actief" afgeleid uit het vermogen (> 50 W) |
-| `heater` | Elektrisch element aan/uit |
+| `heater` | Elektrisch element aan/uit. Zonder deze sensor wordt "actief" afgeleid uit het vermogen (> `element_power`, standaard 800 W) |
 | `defrost` / `online` / `fault` | Ontdooien, online-status en storing |
 | `away` | Afwezigheidsstand |
 | `mode` | Modus (Eco+, Handmatig, Programma) |
@@ -202,7 +203,7 @@ De productfoto's zijn eigendom van Atlantic. Neem ze daarom niet op in een publi
 ## Goed om te weten
 
 - De stroomrichting in de spiraal loopt van boven naar beneden: het hete gas komt bovenin binnen en gaat onderin naar het expansieventiel. Staat de richting bij jou omgekeerd, zet dan `reverse_flow: true`.
-- De status "compressor actief" wordt afgeleid uit het vermogen als je geen `compressor`-sensor opgeeft.
+- De status "compressor actief" wordt afgeleid uit het vermogen (> 50 W, terwijl het element uit is) als je geen `compressor`-sensor opgeeft. Het element telt als actief boven `element_power` (standaard 800 W) als je geen `heater`-sensor opgeeft. Een warmtepomp vraagt meestal tot ongeveer 500 W, het element ruim 1 kW; pas `element_power` aan als jouw waarden anders zijn.
 - Een entiteit die niet bestaat, wordt stilletjes overgeslagen. Controleer bij een lege waarde of de entiteit-ID klopt.
 
 ## Licentie
