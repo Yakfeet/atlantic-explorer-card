@@ -6,8 +6,8 @@ An animated dashboard card for the **Atlantic Explorer V5** heat pump water heat
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-dark.gif">
-    <img src="images/boiler-light.gif" alt="Atlantic Explorer V5 card" width="380">
+    <source media="(prefers-color-scheme: dark)" srcset="images/en/boiler-dark.gif">
+    <img src="images/en/boiler-light.gif" alt="Atlantic Explorer V5 card" width="380">
   </picture>
 </p>
 
@@ -28,8 +28,6 @@ Do you have a Panasonic monoblock? There is a separate card for that: `panasonic
 3. Paste the URL of this repository, choose type **Dashboard** and click **Add**.
 4. Search for **Atlantic Explorer Card**, click **Download** and reload the browser (Ctrl+F5).
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Yakfeet&repository=atlantic-explorer-card&category=plugin)
-
 ### Manual
 
 1. Download `dist/atlantic-explorer-card.js` and place it in `/config/www/`.
@@ -45,7 +43,7 @@ Edit a dashboard, choose **Add card**, open the card's YAML editor and fill in y
 
 ```yaml
 type: custom:atlantic-explorer-card
-title: Warmtepompboiler
+title: Water heater   # optional
 min_temp: 15
 max_temp: 60
 entities:
@@ -66,7 +64,8 @@ entities:
 
 | Option | Description | Default |
 | --- | --- | --- |
-| `title` | Card title | `Warmtepompboiler` |
+| `title` | Card title | by language (`Warmtepompboiler` / `Heat pump water heater`) |
+| `language` | Card language: `nl` or `en`. Defaults to the Home Assistant language | automatic |
 | `min_temp` | Temperature that counts as "cold" (colour and percentage) | `15` |
 | `max_temp` | Temperature that counts as "hot" | `60` |
 | `reverse_flow` | Reverses the flow animation in the coil and the air arrows | `false` |
@@ -106,8 +105,8 @@ entities:
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-horizontal-dark.gif">
-    <img src="images/boiler-horizontal-light.gif" alt="Landscape on a wide screen" width="760">
+    <source media="(prefers-color-scheme: dark)" srcset="images/en/boiler-horizontal-dark.gif">
+    <img src="images/en/boiler-horizontal-light.gif" alt="Landscape on a wide screen" width="760">
   </picture>
 </p>
 
@@ -132,8 +131,8 @@ cards:
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-details-dark.png">
-    <img src="images/boiler-details-light.png" alt="Details only" width="560">
+    <source media="(prefers-color-scheme: dark)" srcset="images/en/boiler-details-dark.png">
+    <img src="images/en/boiler-details-light.png" alt="Details only" width="560">
   </picture>
 </p>
 
@@ -147,8 +146,8 @@ The Explorer has two functions that share the same input. On the water heater it
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-dark.gif">
-    <img src="images/boiler-light.gif" alt="Smart Grid" width="380">
+    <source media="(prefers-color-scheme: dark)" srcset="images/en/boiler-dark.gif">
+    <img src="images/en/boiler-light.gif" alt="Smart Grid" width="380">
   </picture>
 </p>
 
@@ -165,14 +164,22 @@ The EMS (energy management system) controls the water heater through inputs **I1
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-pvboost-dark.gif">
-    <img src="images/boiler-pvboost-light.gif" alt="PV Boost" width="380">
+    <source media="(prefers-color-scheme: dark)" srcset="images/en/boiler-pvboost-dark.gif">
+    <img src="images/en/boiler-pvboost-light.gif" alt="PV Boost" width="380">
   </picture>
 </p>
 
 Only I1 counts then. The card shows a **PV Boost** block with the buttons Uit and Aan, and `sg_2` is ignored.
 
-### Good to know
+### Language
+
+The card automatically uses the language of your Home Assistant, including the number format (comma or point). **Dutch** and **English** are available; any other language falls back to English. To use a different language than Home Assistant, set `language: nl` or `language: en` on the card.
+
+You can add a language in `dist/atlantic-explorer-card.js`: copy the `en` block in the `TR` table at the top, give it the language code (for example `de`) and translate the texts. Pull requests are welcome.
+
+Operating mode names (such as Standard or Boost) come from your water heater or the `water_heater` entity and are translated for Dutch and English; unknown modes are shown as they are.
+
+## Good to know
 
 - If you leave out `grid_mode`, the card decides itself: with a switch for I1 and `sg_2` it works as Smart Grid, otherwise as PV Boost.
 - In Smart Grid mode the I1 switch is **not** PV Boost any more, so the separate "PV Boost" chip is not shown.

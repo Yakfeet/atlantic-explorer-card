@@ -28,8 +28,6 @@ Heb je een Panasonic monoblock? Daar is een aparte kaart voor: `panasonic-monobl
 3. Plak de URL van deze repository, kies type **Dashboard** en klik **Toevoegen**.
 4. Zoek **Atlantic Explorer Card**, klik **Downloaden** en herlaad de browser (Ctrl+F5).
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Yakfeet&repository=atlantic-explorer-card&category=plugin)
-
 ### Handmatig
 
 1. Download `dist/atlantic-explorer-card.js` en zet het in `/config/www/`.
@@ -45,7 +43,7 @@ Bewerk een dashboard, kies **Kaart toevoegen**, open de YAML-editor van de kaart
 
 ```yaml
 type: custom:atlantic-explorer-card
-title: Warmtepompboiler
+title: Warmtepompboiler   # optioneel
 min_temp: 15
 max_temp: 60
 entities:
@@ -66,7 +64,8 @@ entities:
 
 | Optie | Omschrijving | Standaard |
 | --- | --- | --- |
-| `title` | Titel van de kaart | `Warmtepompboiler` |
+| `title` | Titel van de kaart | naar taal (`Warmtepompboiler` / `Heat pump water heater`) |
+| `language` | Taal van de kaart: `nl` of `en`. Standaard de taal van Home Assistant | automatisch |
 | `min_temp` | Temperatuur die als "koud" geldt (kleur en percentage) | `15` |
 | `max_temp` | Temperatuur die als "heet" geldt | `60` |
 | `reverse_flow` | Draait de stroomanimatie in de spiraal en de luchtpijlen om | `false` |
@@ -172,7 +171,15 @@ Het EMS (energiemanagementsysteem) stuurt de boiler aan via de ingangen **I1** e
 
 Dan telt alleen I1. De kaart toont een blok **PV Boost** met de knoppen Uit en Aan, en `sg_2` wordt genegeerd.
 
-### Goed om te weten
+### Taal
+
+De kaart gebruikt automatisch de taal van je Home Assistant, ook voor de getalnotatie (komma of punt). Er zijn **Nederlands** en **Engels**; elke andere taal valt terug op Engels. Wil je een andere taal dan Home Assistant gebruikt, zet dan `language: nl` of `language: en` in de kaart.
+
+Een taal toevoegen kan in `dist/atlantic-explorer-card.js`: kopieer in de tabel `TR` bovenin het blok `en`, geef het de code van de taal (bijvoorbeeld `de`) en vertaal de teksten. Een pull request is welkom.
+
+De namen van de modi (zoals Standaard of Boost) komen van je boiler of de `water_heater`-entiteit en worden voor Nederlands en Engels vertaald; onbekende modi worden getoond zoals ze zijn.
+
+## Goed om te weten
 
 - Laat je `grid_mode` weg, dan kiest de kaart zelf: met een schakelaar voor I1 en `sg_2` werkt hij als Smart Grid, anders als PV Boost.
 - In de Smart Grid-stand is de schakelaar van I1 **geen** PV Boost meer, dus de losse chip "PV Boost" wordt dan niet getoond.
