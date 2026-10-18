@@ -67,6 +67,9 @@ class WPBase extends HTMLElement {
         if (id) this.dispatchEvent(new CustomEvent('hass-more-info', { bubbles: true, composed: true, detail: { entityId: id } }));
       });
     });
+    this.shadowRoot.querySelectorAll('[data-sg]').forEach((el) => {
+      el.addEventListener('click', () => { if (this._sgSet) this._sgSet(el.dataset.sg); });
+    });
   }
 
   /* leiding met bewegende stippen; de stroom loopt van het begin naar het einde van `d` */
@@ -94,7 +97,12 @@ class WPBase extends HTMLElement {
   _shell(title, pill, body) {
     this.shadowRoot.innerHTML = `
     <style>
-      ha-card{display:block;padding:16px;overflow:hidden}
+      ha-card{display:block;padding:16px;overflow:hidden;container-type:inline-size}
+      .wrap{display:block}
+      .wrap.horizontal{display:grid;grid-template-columns:minmax(170px,30%) 1fr;gap:20px;align-items:center}
+      @container (min-width:660px){.wrap.auto{display:grid;grid-template-columns:minmax(170px,30%) 1fr;gap:20px;align-items:center}}
+      @container (min-width:660px){.wrap.auto .chips,.wrap.auto .sg:first-child{margin-top:0}}
+      .wrap.horizontal .chips{margin-top:0}
       .head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
       .title{font-size:1.1rem;font-weight:600;color:var(--primary-text-color)}
       .pill{font-size:.82rem;padding:6px 14px;border-radius:999px;background:rgba(255,120,40,.16);color:#ff9a55;white-space:nowrap}
@@ -115,6 +123,14 @@ class WPBase extends HTMLElement {
       .stat{background:var(--secondary-background-color);border-radius:12px;padding:10px 14px}
       .stat span{display:block;font-size:.74rem;color:var(--secondary-text-color);margin-bottom:3px}
       .stat b{display:block;font-size:1.02rem;color:var(--primary-text-color);font-weight:600;white-space:nowrap}
+      .sg{margin-top:10px;background:var(--secondary-background-color);border-radius:12px;padding:10px 12px}
+      .sg-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+      .sg-head b{font-size:.9rem;font-weight:600;color:var(--primary-text-color)}
+      .sg-head span{font-size:.76rem;color:var(--secondary-text-color)}
+      .sg-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
+      .sg-btns button{font:inherit;font-size:.78rem;border:0;border-radius:8px;padding:9px 6px;cursor:pointer;background:var(--card-background-color);color:var(--primary-text-color)}
+      .sg-btns button.on{background:var(--primary-color);color:var(--text-primary-color,#fff)}
+      .sg-btns button:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
       .sp{transform-box:view-box}
       @keyframes spin{to{transform:rotate(360deg)}}
       @keyframes flow{to{stroke-dashoffset:-22}}
@@ -153,8 +169,34 @@ const EXP = {
 };
 
 class AtlanticExplorerCard extends WPBase {
-  static defaults() { return { title: 'Warmtepompboiler', min_temp: 15, max_temp: 60, reverse_flow: false, image: '' }; }
+  static defaults() { return { title: 'Warmtepompboiler', min_temp: 15, max_temp: 60, reverse_flow: false, image: '', grid_mode: '', view: 'full', layout: 'auto' }; }
   static getStubConfig() { return { type: 'custom:atlantic-explorer-card', entities: { tank_temp: 'sensor.explorer_midden_temp' } }; }
+
+  /* Ingang I1 van de Explorer hangt aan dezelfde schakelaar als PV Boost: `sg_1`, of anders `pv_boost`.
+     Op de boiler zelf kies je of die ingang als Smart Grid (I1 + I2) of als PV Boost werkt;
+     dat stel je hier in met `grid_mode`. */
+  _i1() { return this._c.entities.sg_1 || this._c.entities.pv_boost; }
+  _isOn(id) {
+    const s = id ? this._hass.states[id] : null;
+    return !!s && ON_STATES.includes(String(s.state).toLowerCase());
+  }
+  _gridMode() {
+    return this._c.grid_mode || (this._i1() && this._c.entities.sg_2 ? 'smart_grid' : 'pv_boost');
+  }
+  /* Schakelaar aan = ingang 1. Eerst alles wat uit moet, dan wat aan moet, zodat de
+     tussenstand nooit "geforceerd aan" (1:1) is. */
+  async _sgSet(code) {
+    const call = (id, on) => this._hass.callService('homeassistant', on ? 'turn_on' : 'turn_off', { entity_id: id });
+    if (code.startsWith('pv:')) {
+      const i1 = this._i1();
+      if (i1) await call(i1, code === 'pv:1');
+      return;
+    }
+    const [a, b] = code.split(':');
+    const wanted = [[this._i1(), a === '1'], [this._c.entities.sg_2, b === '1']].filter((x) => x[0]);
+    await Promise.all(wanted.filter((x) => !x[1]).map((x) => call(x[0], false)));
+    await Promise.all(wanted.filter((x) => x[1]).map((x) => call(x[0], true)));
+  }
 
   _render() {
     if (!this._hass || !this._c) return;
@@ -266,9 +308,9 @@ class AtlanticExplorerCard extends WPBase {
       ${fan}
 
       <!-- temperatuur in de tank -->
-      <text x="${X(670)}" y="${Y(960)}" text-anchor="middle" font-size="36" font-weight="700" fill="#fff" stroke="rgba(0,40,90,.35)" stroke-width=".8" paint-order="stroke" data-e="tank_temp">${fmt(top, 0, ' °C')}</text>
-      <text x="${X(670)}" y="${Y(960) + 22}" text-anchor="middle" font-size="12.5" fill="#fff" stroke="rgba(0,40,90,.3)" stroke-width=".6" paint-order="stroke" data-e="setpoint">${isNum(setpoint) ? `doel ${fmt(setpoint, 0, ' °C')}` : ''}${pct !== null && isNum(setpoint) ? ` · ${pct}%` : ''}</text>
-      ${!onlyMid ? `<text x="${X(670)}" y="${Y(960) + 40}" text-anchor="middle" font-size="10.5" fill="#fff" fill-opacity=".9" stroke="rgba(0,40,90,.3)" stroke-width=".5" paint-order="stroke">boven ${fmt(top, 1, '°')} · onder ${fmt(bottom, 1, '°')}</text>` : ''}
+      <text x="${X(610)}" y="${Y(920)}" text-anchor="middle" font-size="36" font-weight="700" fill="#fff" stroke="rgba(0,40,90,.35)" stroke-width=".8" paint-order="stroke" data-e="tank_temp">${fmt(top, 0, ' °C')}</text>
+      <text x="${X(610)}" y="${Y(920) + 22}" text-anchor="middle" font-size="12.5" fill="#fff" stroke="rgba(0,40,90,.3)" stroke-width=".6" paint-order="stroke" data-e="setpoint">${isNum(setpoint) ? `doel ${fmt(setpoint, 0, ' °C')}` : ''}${pct !== null && isNum(setpoint) ? ` · ${pct}%` : ''}</text>
+      ${!onlyMid ? `<text x="${X(610)}" y="${Y(920) + 40}" text-anchor="middle" font-size="10.5" fill="#fff" fill-opacity=".9" stroke="rgba(0,40,90,.3)" stroke-width=".5" paint-order="stroke">boven ${fmt(top, 1, '°')} · onder ${fmt(bottom, 1, '°')}</text>` : ''}
 
       <!-- lucht in / uit -->
       ${arrow(14, 62, 82, 0)}${arrow(14, 62, 106, 0.25)}${arrow(380, 428, 94, 0.1)}
@@ -282,15 +324,37 @@ class AtlanticExplorerCard extends WPBase {
       <text x="6" y="${coldY - 7}" class="lbl">Koud in</text>
     </svg>`;
 
+    const SG = {
+      '0:0': ['Normaal', 'Normale werking'],
+      '1:0': ['Aanbevolen aan', 'Aanbeveling inschakelen'],
+      '0:1': ['Uit', 'Commando uitschakelen'],
+      '1:1': ['Vol vermogen', 'Inschakelen op vol vermogen (geforceerd aan)'],
+    };
+    const gm = this._gridMode();
+    const i1 = this._i1(), i2 = c.entities.sg_2;
+    const i1Key = c.entities.sg_1 ? 'sg_1' : 'pv_boost';
+    const hasSg = gm === 'smart_grid' && !!this._hass.states[i1] && !!this._hass.states[i2];
+    const hasPv = gm === 'pv_boost' && !!this._hass.states[i1];
+    const sgCode = `${this._isOn(i1) ? 1 : 0}:${this._isOn(i2) ? 1 : 0}`;
+    const pvOn = this._isOn(i1);
+    const sgHtml = hasSg ? `<div class="sg">
+      <div class="sg-head"><b>Smart Grid</b><span>${sgCode} · ${SG[sgCode][1]}</span></div>
+      <div class="sg-btns">${Object.keys(SG).map((k) => `<button type="button" data-sg="${k}" class="${k === sgCode ? 'on' : ''}" title="EMS-status ${k}: ${SG[k][1]}">${SG[k][0]}</button>`).join('')}</div>
+    </div>` : hasPv ? `<div class="sg">
+      <div class="sg-head"><b>PV Boost</b><span>${pvOn ? 'Boost actief' : 'Boost uit'}</span></div>
+      <div class="sg-btns"><button type="button" data-sg="pv:0" class="${pvOn ? '' : 'on'}">Uit</button><button type="button" data-sg="pv:1" class="${pvOn ? 'on' : ''}">Aan</button></div>
+    </div>` : '';
+
     const chips = [
       this._chip('Compressor', hp, 'compressor'),
       this._chip('Ventilator', hp),
       this._chip('Element', heater, 'heater'),
-      this._has('pv_boost') ? this._chip('PV Boost', this._on('pv_boost'), 'pv_boost') : '',
+      this._has('pv_boost') && !(gm === 'smart_grid' && c.entities.pv_boost === i1) ? this._chip('PV Boost', this._on('pv_boost'), 'pv_boost') : '',
       this._has('defrost') ? this._chip('Ontdooien', defrost, 'defrost') : '',
       this._has('online') ? this._chip('Online', this._on('online'), 'online') : '',
       this._has('fault') ? this._chip('Storing', fault, 'fault') : '',
       away ? this._chip('Afwezig', true) : '',
+      hasSg && sgCode !== '0:0' ? this._chip('Smart Grid: ' + SG[sgCode][0], true, i1Key) : '',
     ].join('');
 
     const et = this._n('energy_total');
@@ -320,11 +384,27 @@ class AtlanticExplorerCard extends WPBase {
     else if (isNum(top) && isNum(setpoint) && top >= setpoint - 1) pill = { text: 'Op temperatuur', cls: 'idle' };
     else pill = { text: 'Stand-by', cls: 'idle' };
 
-    this._shell(c.title, pill, svg + `<div class="chips">${chips}</div><div class="stats">${stats}</div>`);
+    /* view: full = tekening + details | drawing = alleen tekening | details = alleen chips, Smart Grid en waarden
+       layout (bij view full): auto = naast elkaar zodra de kaart breed genoeg is | vertical | horizontal */
+    const info = `<div class="chips">${chips}</div>${sgHtml}<div class="stats">${stats}</div>`;
+    const view = c.view === 'drawing' || c.view === 'details' ? c.view : 'full';
+    const layout = c.layout === 'vertical' || c.layout === 'horizontal' ? c.layout : 'auto';
+    const body = view === 'drawing' ? svg
+      : view === 'details' ? info
+      : `<div class="wrap ${layout}"><div class="draw">${svg}</div><div class="info">${info}</div></div>`;
+    this._shell(c.title, pill, body);
   }
 }
 
 
+/* Losse kaart met alleen de details (chips, Smart Grid en waarden), voor bijvoorbeeld een liggend scherm */
+class AtlanticExplorerDetailsCard extends AtlanticExplorerCard {
+  static defaults() { return { ...AtlanticExplorerCard.defaults(), view: 'details', title: 'Boiler details' }; }
+  getCardSize() { return 4; }
+}
+
 customElements.define('atlantic-explorer-card', AtlanticExplorerCard);
+customElements.define('atlantic-explorer-details-card', AtlanticExplorerDetailsCard);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: 'atlantic-explorer-card', name: 'Atlantic Explorer V5', description: 'Geanimeerde kaart voor een Atlantic Explorer V5 warmtepompboiler', preview: false });
+window.customCards.push({ type: 'atlantic-explorer-details-card', name: 'Atlantic Explorer V5 (details)', description: 'Alleen de details van de Atlantic Explorer V5: status, Smart Grid / PV Boost en waarden', preview: false });
