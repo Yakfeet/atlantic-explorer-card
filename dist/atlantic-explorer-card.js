@@ -169,7 +169,7 @@ const EXP = {
 };
 
 class AtlanticExplorerCard extends WPBase {
-  static defaults() { return { title: 'Warmtepompboiler', min_temp: 15, max_temp: 60, reverse_flow: false, image: '', grid_mode: '', view: 'full', layout: 'auto' }; }
+  static defaults() { return { title: 'Warmtepompboiler', min_temp: 15, max_temp: 60, reverse_flow: false, image: '', element_power: 800, grid_mode: '', view: 'full', layout: 'auto' }; }
   static getStubConfig() { return { type: 'custom:atlantic-explorer-card', entities: { tank_temp: 'sensor.explorer_midden_temp' } }; }
 
   /* Ingang I1 van de Explorer hangt aan dezelfde schakelaar als PV Boost: `sg_1`, of anders `pv_boost`.
@@ -207,7 +207,8 @@ class AtlanticExplorerCard extends WPBase {
     const onlyMid = !this._has('tank_top') && !this._has('tank_bottom');
     const setpoint = this._n('setpoint') ?? (wh ? parseFloat(wh.attributes.temperature) : null);
     const power = this._n('power');
-    const heater = this._on('heater');
+    /* zonder `heater`-entiteit: element actief als het vermogen boven `element_power` (W) komt */
+    const heater = this._has('heater') ? this._on('heater') : (isNum(power) && power > c.element_power);
     const fault = this._fault();
     const away = this._on('away') || (wh && wh.attributes.away_mode === 'on');
     const defrost = this._on('defrost');
@@ -308,9 +309,9 @@ class AtlanticExplorerCard extends WPBase {
       ${fan}
 
       <!-- temperatuur in de tank -->
-      <text x="${X(610)}" y="${Y(920)}" text-anchor="middle" font-size="36" font-weight="700" fill="#fff" stroke="rgba(0,40,90,.35)" stroke-width=".8" paint-order="stroke" data-e="tank_temp">${fmt(top, 0, ' °C')}</text>
-      <text x="${X(610)}" y="${Y(920) + 22}" text-anchor="middle" font-size="12.5" fill="#fff" stroke="rgba(0,40,90,.3)" stroke-width=".6" paint-order="stroke" data-e="setpoint">${isNum(setpoint) ? `doel ${fmt(setpoint, 0, ' °C')}` : ''}${pct !== null && isNum(setpoint) ? ` · ${pct}%` : ''}</text>
-      ${!onlyMid ? `<text x="${X(610)}" y="${Y(920) + 40}" text-anchor="middle" font-size="10.5" fill="#fff" fill-opacity=".9" stroke="rgba(0,40,90,.3)" stroke-width=".5" paint-order="stroke">boven ${fmt(top, 1, '°')} · onder ${fmt(bottom, 1, '°')}</text>` : ''}
+      <text x="${X(610)}" y="${Y(920)}" text-anchor="middle" font-size="36" font-weight="700" fill="#fff" stroke="rgba(70,25,0,.55)" stroke-width="3.2" stroke-linejoin="round" paint-order="stroke" data-e="tank_temp">${fmt(top, 0, ' °C')}</text>
+      <text x="${X(610)}" y="${Y(920) + 22}" text-anchor="middle" font-size="12.5" fill="#fff" stroke="rgba(70,25,0,.55)" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke" data-e="setpoint">${isNum(setpoint) ? `doel ${fmt(setpoint, 0, ' °C')}` : ''}${pct !== null && isNum(setpoint) ? ` · ${pct}%` : ''}</text>
+      ${!onlyMid ? `<text x="${X(610)}" y="${Y(920) + 40}" text-anchor="middle" font-size="10.5" fill="#fff" fill-opacity=".9" stroke="rgba(70,25,0,.55)" stroke-width="2.2" stroke-linejoin="round" paint-order="stroke">boven ${fmt(top, 1, '°')} · onder ${fmt(bottom, 1, '°')}</text>` : ''}
 
       <!-- lucht in / uit -->
       ${arrow(14, 62, 82, 0)}${arrow(14, 62, 106, 0.25)}${arrow(380, 428, 94, 0.1)}
@@ -349,7 +350,7 @@ class AtlanticExplorerCard extends WPBase {
       this._chip('Compressor', hp, 'compressor'),
       this._chip('Ventilator', hp),
       this._chip('Element', heater, 'heater'),
-      this._has('pv_boost') && !(gm === 'smart_grid' && c.entities.pv_boost === i1) ? this._chip('PV Boost', this._on('pv_boost'), 'pv_boost') : '',
+      this._has('pv_boost') && !(hasPv && c.entities.pv_boost === i1) && !(gm === 'smart_grid' && c.entities.pv_boost === i1) ? this._chip('PV Boost', this._on('pv_boost'), 'pv_boost') : '',
       this._has('defrost') ? this._chip('Ontdooien', defrost, 'defrost') : '',
       this._has('online') ? this._chip('Online', this._on('online'), 'online') : '',
       this._has('fault') ? this._chip('Storing', fault, 'fault') : '',
