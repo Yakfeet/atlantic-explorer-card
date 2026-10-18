@@ -28,8 +28,6 @@ Heb je een Panasonic monoblock? Daar is een aparte kaart voor: `panasonic-monobl
 3. Plak de URL van deze repository, kies type **Dashboard** en klik **Toevoegen**.
 4. Zoek **Atlantic Explorer Card**, klik **Downloaden** en herlaad de browser (Ctrl+F5).
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Yakfeet&repository=atlantic-explorer-card&category=plugin)
-
 ### Handmatig
 
 1. Download `dist/atlantic-explorer-card.js` en zet het in `/config/www/`.
@@ -58,7 +56,8 @@ entities:
   cop: sensor.explorer_cop_laatste_cyclus
   available_liters: sensor.explorer_38c_geschat
   remaining_minutes: sensor.explorer_38c_resterend
-  pv_boost: switch.wpboiler_pv_boost
+  pv_boost: switch.wpboiler_pv_boost    # ingang I1 (PV Boost of Smart Grid)
+  sg_2: switch.explorer_smart_grid_i2   # ingang I2, alleen voor Smart Grid
 ```
 
 ### Opties
@@ -70,6 +69,7 @@ entities:
 | `max_temp` | Temperatuur die als "heet" geldt | `60` |
 | `reverse_flow` | Draait de stroomanimatie in de spiraal en de luchtpijlen om | `false` |
 | `image` | Optioneel: eigen afbeelding van de doorsnede in plaats van de tekening, zie hieronder | leeg |
+| `grid_mode` | Waarvoor ingang I1 op de boiler is ingesteld: `smart_grid` of `pv_boost`, zie hieronder | automatisch |
 
 ### Entiteiten
 
@@ -88,12 +88,67 @@ entities:
 | `available_liters` | Beschikbaar warm water (L) |
 | `remaining_minutes` | Resterende tijd warm water (min) |
 | `runtime_defrost` | Looptijd tot de volgende ontdooiing (min) |
-| `pv_boost` | Schakelaar voor boost op zonne-energie |
+| `pv_boost` | Schakelaar van ingang I1: PV Boost, of bij Smart Grid ingang I1 |
+| `sg_1` | Alleen nodig als I1 aan een andere schakelaar hangt dan `pv_boost`. Anders weglaten |
+| `sg_2` | Schakelaar van ingang I2 (alleen Smart Grid) |
 | `compressor` | Warmtepomp actief aan/uit. Zonder deze sensor wordt "actief" afgeleid uit het vermogen (> 50 W) |
 | `heater` | Elektrisch element aan/uit |
 | `defrost` / `online` / `fault` | Ontdooien, online-status en storing |
 | `away` | Afwezigheidsstand |
 | `mode` | Modus (Eco+, Handmatig, Programma) |
+
+---
+
+## Liggend scherm of losse kaarten
+
+Op een breed of liggend scherm staat de tekening vanzelf links en staan de status, Smart Grid en de waarden rechts ernaast, zodra de kaart ongeveer 660 pixels breed is. Je kunt dat ook zelf kiezen, of de kaart in tweeën splitsen:
+
+| Optie | Waarden | Standaard | Wat het doet |
+| --- | --- | --- | --- |
+| `layout` | `auto`, `horizontal`, `vertical` | `auto` | Tekening naast of boven de details |
+| `view` | `full`, `drawing`, `details` | `full` | Alles, alleen de tekening, of alleen de details |
+
+Voor twee losse kaarten naast elkaar gebruik je dezelfde configuratie twee keer:
+
+```yaml
+type: horizontal-stack
+cards:
+  - type: custom:atlantic-explorer-card
+    view: drawing
+    entities: { ... }
+  - type: custom:atlantic-explorer-details-card
+    entities: { ... }
+```
+
+`atlantic-explorer-details-card` is gewoon een kaart met `view: details`. Gebruik in beide kaarten dezelfde `entities`, bijvoorbeeld met een YAML-anker of door de lijst te kopiëren.
+
+## Smart Grid en PV Boost bedienen
+
+De Explorer heeft twee functies die dezelfde ingang gebruiken. Op de boiler zelf stel je in of ingang **I1** werkt als **PV Boost** (boost op zonne-energie) of als onderdeel van **Smart Grid**. De kaart kan niet uitlezen welke van de twee is ingesteld, dus geef je dat op met `grid_mode`.
+
+### Smart Grid (`grid_mode: smart_grid`)
+
+Het EMS (energiemanagementsysteem) stuurt de boiler aan via de ingangen **I1** en **I2** van de printplaat. Hangen die bij jou aan twee losse schakelaars, dan bedien je ze met de kaart. Zet de schakelaar van I1 bij `pv_boost` (of bij `sg_1`) en de schakelaar van I2 bij `sg_2`. Onder de chips verschijnt dan een blok **Smart Grid** met vier knoppen:
+
+| Knop | I1 | I2 | EMS-status | Werkingsmodus |
+| --- | --- | --- | --- | --- |
+| Normaal | 0 | 0 | 0:0 | Normale werking |
+| Aanbevolen aan | 1 | 0 | 1:0 | Aanbeveling inschakelen |
+| Uit | 0 | 1 | 0:1 | Commando uitschakelen |
+| Vol vermogen | 1 | 1 | 1:1 | Inschakelen op vol vermogen (geforceerd aan) |
+
+### PV Boost (`grid_mode: pv_boost`)
+
+Dan telt alleen I1. De kaart toont een blok **PV Boost** met de knoppen Uit en Aan, en `sg_2` wordt genegeerd.
+
+### Goed om te weten
+
+- Laat je `grid_mode` weg, dan kiest de kaart zelf: met een schakelaar voor I1 en `sg_2` werkt hij als Smart Grid, anders als PV Boost.
+- In de Smart Grid-stand is de schakelaar van I1 **geen** PV Boost meer, dus de losse chip "PV Boost" wordt dan niet getoond.
+- Verander je de instelling op de boiler, pas dan ook `grid_mode` in de kaart aan.
+- Schakelaar **aan** betekent ingang **1**. Is jouw relais omgekeerd aangesloten, ruil dan de betekenis om in je eigen configuratie.
+- Bij het wisselen van stand gaat eerst uit wat uit moet en daarna aan wat aan moet. Zo komt de boiler bij een wissel niet even in "geforceerd aan" (1:1) terecht.
+- Werkt de schakelaar niet als `switch`, dan kan ook een `input_boolean` of een ander apparaat dat `homeassistant.turn_on` en `homeassistant.turn_off` begrijpt.
 
 ---
 

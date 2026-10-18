@@ -28,8 +28,6 @@ Do you have a Panasonic monoblock? There is a separate card for that: `panasonic
 3. Paste the URL of this repository, choose type **Dashboard** and click **Add**.
 4. Search for **Atlantic Explorer Card**, click **Download** and reload the browser (Ctrl+F5).
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Yakfeet&repository=atlantic-explorer-card&category=plugin)
-
 ### Manual
 
 1. Download `dist/atlantic-explorer-card.js` and place it in `/config/www/`.
@@ -58,7 +56,8 @@ entities:
   cop: sensor.explorer_cop_laatste_cyclus
   available_liters: sensor.explorer_38c_geschat
   remaining_minutes: sensor.explorer_38c_resterend
-  pv_boost: switch.wpboiler_pv_boost
+  pv_boost: switch.wpboiler_pv_boost    # input I1 (PV Boost or Smart Grid)
+  sg_2: switch.explorer_smart_grid_i2   # input I2, Smart Grid only
 ```
 
 ### Options
@@ -70,6 +69,7 @@ entities:
 | `max_temp` | Temperature that counts as "hot" | `60` |
 | `reverse_flow` | Reverses the flow animation in the coil and the air arrows | `false` |
 | `image` | Optional: your own cutaway image instead of the drawing, see below | empty |
+| `grid_mode` | What input I1 is set to on the water heater: `smart_grid` or `pv_boost`, see below | automatic |
 
 ### Entities
 
@@ -88,12 +88,67 @@ entities:
 | `available_liters` | Available hot water (L) |
 | `remaining_minutes` | Remaining hot water time (min) |
 | `runtime_defrost` | Run time until the next defrost (min) |
-| `pv_boost` | Switch for boosting on solar power |
+| `pv_boost` | Switch of input I1: PV Boost, or input I1 when used for Smart Grid |
+| `sg_1` | Only needed if I1 is wired to a different switch than `pv_boost`. Otherwise leave it out |
+| `sg_2` | Switch of input I2 (Smart Grid only) |
 | `compressor` | Heat pump active on/off. Without it, "active" is derived from power (> 50 W) |
 | `heater` | Electric element on/off |
 | `defrost` / `online` / `fault` | Defrost, online status and fault |
 | `away` | Away mode |
 | `mode` | Mode (Eco+, Manual, Programmed) |
+
+---
+
+## Landscape screens and separate cards
+
+On a wide or landscape screen the drawing automatically sits on the left, with the status, Smart Grid and values next to it, as soon as the card is about 660 pixels wide. You can also choose this yourself, or split the card in two:
+
+| Option | Values | Default | What it does |
+| --- | --- | --- | --- |
+| `layout` | `auto`, `horizontal`, `vertical` | `auto` | Drawing next to or above the details |
+| `view` | `full`, `drawing`, `details` | `full` | Everything, only the drawing, or only the details |
+
+For two separate cards side by side, use the same configuration twice:
+
+```yaml
+type: horizontal-stack
+cards:
+  - type: custom:atlantic-explorer-card
+    view: drawing
+    entities: { ... }
+  - type: custom:atlantic-explorer-details-card
+    entities: { ... }
+```
+
+`atlantic-explorer-details-card` is simply a card with `view: details`. Use the same `entities` in both cards, for example by copying the list.
+
+## Controlling Smart Grid and PV Boost
+
+The Explorer has two functions that share the same input. On the water heater itself you choose whether input **I1** works as **PV Boost** (boost on solar power) or as part of **Smart Grid**. The card cannot read which of the two is set, so you tell it with `grid_mode`.
+
+### Smart Grid (`grid_mode: smart_grid`)
+
+The EMS (energy management system) controls the water heater through inputs **I1** and **I2** on the circuit board. If those are wired to two separate switches in your setup, you operate them from the card. Put the switch of I1 under `pv_boost` (or `sg_1`) and the switch of I2 under `sg_2`. A **Smart Grid** block with four buttons then appears below the chips:
+
+| Button | I1 | I2 | EMS status | Operating mode |
+| --- | --- | --- | --- | --- |
+| Normaal | 0 | 0 | 0:0 | Normal operation |
+| Aanbevolen aan | 1 | 0 | 1:0 | Recommended on |
+| Uit | 0 | 1 | 0:1 | Switch-off command |
+| Vol vermogen | 1 | 1 | 1:1 | Switch on at full power (forced on) |
+
+### PV Boost (`grid_mode: pv_boost`)
+
+Only I1 counts then. The card shows a **PV Boost** block with the buttons Uit and Aan, and `sg_2` is ignored.
+
+### Good to know
+
+- If you leave out `grid_mode`, the card decides itself: with a switch for I1 and `sg_2` it works as Smart Grid, otherwise as PV Boost.
+- In Smart Grid mode the I1 switch is **not** PV Boost any more, so the separate "PV Boost" chip is not shown.
+- If you change the setting on the water heater, change `grid_mode` in the card too.
+- Switch **on** means input **1**. If your relay is wired the other way round, swap the meaning in your own configuration.
+- When changing state, whatever has to turn off is switched first and whatever has to turn on second. That way the water heater never briefly lands in "forced on" (1:1) during a change.
+- If the switch is not a `switch` entity, an `input_boolean` or any other device that understands `homeassistant.turn_on` and `homeassistant.turn_off` works too.
 
 ---
 
