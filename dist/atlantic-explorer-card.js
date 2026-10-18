@@ -9,10 +9,11 @@
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const isNum = (v) => v !== null && v !== undefined && !isNaN(v);
+let NUM_LOCALE = 'nl-NL'; /* wordt bij elke render gezet op de taal van Home Assistant (of `language`) */
 const fmt = (v, d = 1, u = '') =>
-  isNum(v) ? Number(v).toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d }) + u : '–';
+  isNum(v) ? Number(v).toLocaleString(NUM_LOCALE, { minimumFractionDigits: d, maximumFractionDigits: d }) + u : '–';
 const fmtP = (w) => (!isNum(w) ? '–' : Math.abs(w) >= 1000 ? fmt(w / 1000, 2, ' kW') : fmt(w, 0, ' W'));
-const fmtMin = (m) => (!isNum(m) ? '–' : m >= 60 ? `${Math.floor(m / 60)} u ${Math.round(m % 60)} min` : `${Math.round(m)} min`);
+const fmtMin = (m, hr = 'u') => (!isNum(m) ? '–' : m >= 60 ? `${Math.floor(m / 60)} ${hr} ${Math.round(m % 60)} min` : `${Math.round(m)} min`);
 const STOPS = [[0, [47, 128, 208]], [0.28, [60, 190, 235]], [0.42, [240, 220, 150]], [0.58, [250, 170, 60]], [0.8, [245, 110, 40]], [1, [225, 50, 40]]];
 const tempColor = (t, lo = 15, hi = 60) => {
   if (!isNum(t)) return '#9aa5b1';
@@ -28,8 +29,32 @@ const tempColor = (t, lo = 15, hi = 60) => {
 };
 const ON_STATES = ['on', 'true', 'heating', 'heat', 'running', 'active', 'defrosting', 'open', 'online', 'connected'];
 const OK_STATES = ['0', 'off', 'none', 'no fault', 'unknown', 'unavailable', '', 'false', 'ok', 'normal'];
-const MODE_NL = { heat: 'Verwarmen', heating: 'Verwarmen', cool: 'Koelen', cooling: 'Koelen', off: 'Uit', auto: 'Auto', manual: 'Handmatig', eco: 'Eco+', 'eco+': 'Eco+', program: 'Programma', programmed: 'Programma', performance: 'Boost', electric: 'Elektrisch', standard: 'Standaard' };
-const modeText = (v) => (v === null || v === undefined || v === '' ? '' : MODE_NL[String(v).toLowerCase()] || String(v));
+/* ---------- vertalingen: voeg hier een taal toe (zoals `de`) en kopieer de sleutels van `en` ---------- */
+const TR = {
+  nl: {
+    title: 'Warmtepompboiler', detailsTitle: 'Boiler details', hr: 'u',
+    modes: { heat: 'Verwarmen', heating: 'Verwarmen', cool: 'Koelen', cooling: 'Koelen', off: 'Uit', auto: 'Auto', manual: 'Handmatig', eco: 'Eco+', 'eco+': 'Eco+', program: 'Programma', programmed: 'Programma', performance: 'Boost', electric: 'Elektrisch', standard: 'Standaard' },
+    sg: { '0:0': ['Normaal', 'Normale werking'], '1:0': ['Aanbevolen aan', 'Aanbeveling inschakelen'], '0:1': ['Uit', 'Commando uitschakelen'], '1:1': ['Vol vermogen', 'Inschakelen op vol vermogen (geforceerd aan)'] },
+    emsStatus: 'EMS-status', pvBoost: 'PV Boost', boostOn: 'Boost actief', boostOff: 'Boost uit', off: 'Uit', on: 'Aan',
+    compressor: 'Compressor', fan: 'Ventilator', element: 'Element', defrost: 'Ontdooien', online: 'Online', fault: 'Storing', away: 'Afwezig', smartGrid: 'Smart Grid',
+    power: 'Vermogen', today: 'Vandaag', month: 'Deze maand', total: 'Verbruik totaal', cop: 'COP laatste cyclus', available: 'Beschikbaar', remaining: 'Resterend',
+    coil: 'Verdamper', suction: 'Zuiggas', discharge: 'Persgas', valve: 'Ventiel', untilDefrost: 'Tot ontdooien', mode: 'Modus', target: 'Doeltemperatuur',
+    pillFault: 'Storing', pillDefrost: 'Ontdooien', pillBoth: 'Verwarmen · warmtepomp + element', pillHp: 'Verwarmen · warmtepomp', pillEl: 'Verwarmen · element', pillOk: 'Op temperatuur', pillIdle: 'Stand-by',
+    goal: 'doel', top: 'boven', bottom: 'onder', airIn: 'Lucht in', airOut: 'Lucht uit', hotOut: 'Warm uit', coldIn: 'Koud in',
+  },
+  en: {
+    title: 'Heat pump water heater', detailsTitle: 'Water heater details', hr: 'h',
+    modes: { heat: 'Heating', heating: 'Heating', cool: 'Cooling', cooling: 'Cooling', off: 'Off', auto: 'Auto', manual: 'Manual', eco: 'Eco+', 'eco+': 'Eco+', program: 'Program', programmed: 'Program', performance: 'Boost', electric: 'Electric', standard: 'Standard' },
+    sg: { '0:0': ['Normal', 'Normal operation'], '1:0': ['Recommended on', 'Recommended switch-on'], '0:1': ['Off', 'Switch-off command'], '1:1': ['Full power', 'Switch on at full power (forced on)'] },
+    emsStatus: 'EMS status', pvBoost: 'PV Boost', boostOn: 'Boost active', boostOff: 'Boost off', off: 'Off', on: 'On',
+    compressor: 'Compressor', fan: 'Fan', element: 'Element', defrost: 'Defrost', online: 'Online', fault: 'Fault', away: 'Away', smartGrid: 'Smart Grid',
+    power: 'Power', today: 'Today', month: 'This month', total: 'Total usage', cop: 'COP last cycle', available: 'Available', remaining: 'Remaining',
+    coil: 'Evaporator', suction: 'Suction gas', discharge: 'Discharge gas', valve: 'Valve', untilDefrost: 'Until defrost', mode: 'Mode', target: 'Target temperature',
+    pillFault: 'Fault', pillDefrost: 'Defrosting', pillBoth: 'Heating · heat pump + element', pillHp: 'Heating · heat pump', pillEl: 'Heating · element', pillOk: 'At temperature', pillIdle: 'Standby',
+    goal: 'target', top: 'top', bottom: 'bottom', airIn: 'Air in', airOut: 'Air out', hotOut: 'Hot out', coldIn: 'Cold in',
+  },
+};
+const modeText = (v, t) => (v === null || v === undefined || v === '' ? '' : t.modes[String(v).toLowerCase()] || String(v));
 const GREY = '#8b9097';
 
 class WPBase extends HTMLElement {
@@ -169,7 +194,7 @@ const EXP = {
 };
 
 class AtlanticExplorerCard extends WPBase {
-  static defaults() { return { title: 'Warmtepompboiler', min_temp: 15, max_temp: 60, reverse_flow: false, image: '', element_power: 800, grid_mode: '', view: 'full', layout: 'auto' }; }
+  static defaults() { return { title: '', language: '', min_temp: 15, max_temp: 60, reverse_flow: false, image: '', element_power: 800, grid_mode: '', view: 'full', layout: 'auto' }; }
   static getStubConfig() { return { type: 'custom:atlantic-explorer-card', entities: { tank_temp: 'sensor.explorer_midden_temp' } }; }
 
   /* Ingang I1 van de Explorer hangt aan dezelfde schakelaar als PV Boost: `sg_1`, of anders `pv_boost`.
@@ -201,6 +226,9 @@ class AtlanticExplorerCard extends WPBase {
   _render() {
     if (!this._hass || !this._c) return;
     const c = this._c, u = this._uid;
+    const lang = String(c.language || (this._hass.locale && this._hass.locale.language) || this._hass.language || 'en').toLowerCase().slice(0, 2);
+    const t = TR[lang] || TR.en;
+    NUM_LOCALE = c.language ? (lang === 'nl' ? 'nl-NL' : 'en-GB') : (this._hass.locale && this._hass.locale.language) || this._hass.language || (lang === 'nl' ? 'nl-NL' : 'en-GB');
     const wh = this._st('water_heater');
     const top = this._n('tank_top') ?? this._n('tank_temp') ?? (wh ? parseFloat(wh.attributes.current_temperature) : null);
     const bottom = this._n('tank_bottom') ?? top;
@@ -217,7 +245,7 @@ class AtlanticExplorerCard extends WPBase {
     else if (isNum(power)) hp = power > 50 && !heater;
     else hp = false;
     const modeRaw = (this._st('mode') && this._st('mode').state) || (wh && (wh.attributes.operation_mode || wh.state)) || '';
-    const mode = modeText(modeRaw);
+    const mode = modeText(modeRaw, t);
 
     const lo = Number(c.min_temp), hi = Number(c.max_temp);
     const target = isNum(setpoint) ? setpoint : hi;
@@ -310,27 +338,22 @@ class AtlanticExplorerCard extends WPBase {
 
       <!-- temperatuur in de tank -->
       <text x="${X(610)}" y="${Y(920)}" text-anchor="middle" font-size="36" font-weight="700" fill="#fff" stroke="rgba(70,25,0,.55)" stroke-width="3.2" stroke-linejoin="round" paint-order="stroke" data-e="tank_temp">${fmt(top, 0, ' °C')}</text>
-      <text x="${X(610)}" y="${Y(920) + 22}" text-anchor="middle" font-size="12.5" fill="#fff" stroke="rgba(70,25,0,.55)" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke" data-e="setpoint">${isNum(setpoint) ? `doel ${fmt(setpoint, 0, ' °C')}` : ''}${pct !== null && isNum(setpoint) ? ` · ${pct}%` : ''}</text>
-      ${!onlyMid ? `<text x="${X(610)}" y="${Y(920) + 40}" text-anchor="middle" font-size="10.5" fill="#fff" fill-opacity=".9" stroke="rgba(70,25,0,.55)" stroke-width="2.2" stroke-linejoin="round" paint-order="stroke">boven ${fmt(top, 1, '°')} · onder ${fmt(bottom, 1, '°')}</text>` : ''}
+      <text x="${X(610)}" y="${Y(920) + 24}" text-anchor="middle" font-size="13.5" font-weight="600" letter-spacing=".3" fill="#fff" stroke="rgba(70,25,0,.6)" stroke-width="2.4" stroke-linejoin="round" paint-order="stroke" data-e="setpoint">${isNum(setpoint) ? `${t.goal} ${fmt(setpoint, 0, ' °C')}` : ''}${pct !== null && isNum(setpoint) ? ` · ${pct}%` : ''}</text>
+      ${!onlyMid ? `<text x="${X(610)}" y="${Y(920) + 42}" text-anchor="middle" font-size="11" font-weight="600" letter-spacing=".2" fill="#fff" stroke="rgba(70,25,0,.6)" stroke-width="2.2" stroke-linejoin="round" paint-order="stroke">${t.top} ${fmt(top, 1, '°')} · ${t.bottom} ${fmt(bottom, 1, '°')}</text>` : ''}
 
       <!-- lucht in / uit -->
       ${arrow(14, 62, 82, 0)}${arrow(14, 62, 106, 0.25)}${arrow(380, 428, 94, 0.1)}
-      ${this._has('air_in') ? lbl(6, 146, 'Lucht in', fmt(this._n('air_in'), 1, ' °C'), 'air_in') : ''}
-      ${this._has('air_out') ? lbl(382, 146, 'Lucht uit', fmt(this._n('air_out'), 1, ' °C'), 'air_out') : ''}
+      ${this._has('air_in') ? lbl(6, 146, t.airIn, fmt(this._n('air_in'), 1, ' °C'), 'air_in') : ''}
+      ${this._has('air_out') ? lbl(382, 146, t.airOut, fmt(this._n('air_out'), 1, ' °C'), 'air_out') : ''}
 
       <!-- tapwater -->
       <line x1="6" y1="${hotY}" x2="${X(EXP.hot[0]) - 12}" y2="${hotY}" stroke="#e8551f" stroke-width="3" stroke-linecap="round"/>
-      <text x="6" y="${hotY - 7}" class="lbl">Warm uit</text>
+      <text x="6" y="${hotY - 7}" class="lbl">${t.hotOut}</text>
       <line x1="6" y1="${coldY}" x2="${X(EXP.cold[0]) - 12}" y2="${coldY}" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-      <text x="6" y="${coldY - 7}" class="lbl">Koud in</text>
+      <text x="6" y="${coldY - 7}" class="lbl">${t.coldIn}</text>
     </svg>`;
 
-    const SG = {
-      '0:0': ['Normaal', 'Normale werking'],
-      '1:0': ['Aanbevolen aan', 'Aanbeveling inschakelen'],
-      '0:1': ['Uit', 'Commando uitschakelen'],
-      '1:1': ['Vol vermogen', 'Inschakelen op vol vermogen (geforceerd aan)'],
-    };
+    const SG = t.sg;
     const gm = this._gridMode();
     const i1 = this._i1(), i2 = c.entities.sg_2;
     const i1Key = c.entities.sg_1 ? 'sg_1' : 'pv_boost';
@@ -339,51 +362,51 @@ class AtlanticExplorerCard extends WPBase {
     const sgCode = `${this._isOn(i1) ? 1 : 0}:${this._isOn(i2) ? 1 : 0}`;
     const pvOn = this._isOn(i1);
     const sgHtml = hasSg ? `<div class="sg">
-      <div class="sg-head"><b>Smart Grid</b><span>${sgCode} · ${SG[sgCode][1]}</span></div>
-      <div class="sg-btns">${Object.keys(SG).map((k) => `<button type="button" data-sg="${k}" class="${k === sgCode ? 'on' : ''}" title="EMS-status ${k}: ${SG[k][1]}">${SG[k][0]}</button>`).join('')}</div>
+      <div class="sg-head"><b>${t.smartGrid}</b><span>${sgCode} · ${SG[sgCode][1]}</span></div>
+      <div class="sg-btns">${Object.keys(SG).map((k) => `<button type="button" data-sg="${k}" class="${k === sgCode ? 'on' : ''}" title="${t.emsStatus} ${k}: ${SG[k][1]}">${SG[k][0]}</button>`).join('')}</div>
     </div>` : hasPv ? `<div class="sg">
-      <div class="sg-head"><b>PV Boost</b><span>${pvOn ? 'Boost actief' : 'Boost uit'}</span></div>
-      <div class="sg-btns"><button type="button" data-sg="pv:0" class="${pvOn ? '' : 'on'}">Uit</button><button type="button" data-sg="pv:1" class="${pvOn ? 'on' : ''}">Aan</button></div>
+      <div class="sg-head"><b>${t.pvBoost}</b><span>${pvOn ? t.boostOn : t.boostOff}</span></div>
+      <div class="sg-btns"><button type="button" data-sg="pv:0" class="${pvOn ? '' : 'on'}">${t.off}</button><button type="button" data-sg="pv:1" class="${pvOn ? 'on' : ''}">${t.on}</button></div>
     </div>` : '';
 
     const chips = [
-      this._chip('Compressor', hp, 'compressor'),
-      this._chip('Ventilator', hp),
-      this._chip('Element', heater, 'heater'),
-      this._has('pv_boost') && !(hasPv && c.entities.pv_boost === i1) && !(gm === 'smart_grid' && c.entities.pv_boost === i1) ? this._chip('PV Boost', this._on('pv_boost'), 'pv_boost') : '',
-      this._has('defrost') ? this._chip('Ontdooien', defrost, 'defrost') : '',
-      this._has('online') ? this._chip('Online', this._on('online'), 'online') : '',
-      this._has('fault') ? this._chip('Storing', fault, 'fault') : '',
-      away ? this._chip('Afwezig', true) : '',
-      hasSg && sgCode !== '0:0' ? this._chip('Smart Grid: ' + SG[sgCode][0], true, i1Key) : '',
+      this._chip(t.compressor, hp, 'compressor'),
+      this._chip(t.fan, hp),
+      this._chip(t.element, heater, 'heater'),
+      this._has('pv_boost') && !(hasPv && c.entities.pv_boost === i1) && !(gm === 'smart_grid' && c.entities.pv_boost === i1) ? this._chip(t.pvBoost, this._on('pv_boost'), 'pv_boost') : '',
+      this._has('defrost') ? this._chip(t.defrost, defrost, 'defrost') : '',
+      this._has('online') ? this._chip(t.online, this._on('online'), 'online') : '',
+      this._has('fault') ? this._chip(t.fault, fault, 'fault') : '',
+      away ? this._chip(t.away, true) : '',
+      hasSg && sgCode !== '0:0' ? this._chip(t.smartGrid + ': ' + SG[sgCode][0], true, i1Key) : '',
     ].join('');
 
     const et = this._n('energy_total');
     const stats = [
-      this._has('power') ? this._stat('Vermogen', fmtP(power), 'power') : '',
-      this._has('energy_today') ? this._stat('Vandaag', fmt(this._n('energy_today'), 2, ' kWh'), 'energy_today') : '',
-      this._has('energy_month') ? this._stat('Deze maand', fmt(this._n('energy_month'), 1, ' kWh'), 'energy_month') : '',
-      this._has('energy_total') ? this._stat('Verbruik totaal', fmt(et, isNum(et) && et < 100 ? 2 : 0, ' kWh'), 'energy_total') : '',
-      this._has('cop') ? this._stat('COP laatste cyclus', fmt(this._n('cop'), 2), 'cop') : '',
-      this._has('available_liters') ? this._stat('Beschikbaar', fmt(this._n('available_liters'), 0, ' L'), 'available_liters') : '',
-      this._has('remaining_minutes') ? this._stat('Resterend', fmtMin(this._n('remaining_minutes')), 'remaining_minutes') : '',
-      this._has('coil') ? this._stat('Verdamper', fmt(this._n('coil'), 0, ' °C'), 'coil') : '',
-      this._has('return_gas') ? this._stat('Zuiggas', fmt(this._n('return_gas'), 0, ' °C'), 'return_gas') : '',
-      this._has('exhaust') ? this._stat('Persgas', fmt(this._n('exhaust'), 0, ' °C'), 'exhaust') : '',
-      this._has('eev') ? this._stat('Ventiel', fmt(this._n('eev'), 0, ' P'), 'eev') : '',
-      this._has('runtime_defrost') ? this._stat('Tot ontdooien', fmtMin(this._n('runtime_defrost')), 'runtime_defrost') : '',
-      mode ? this._stat('Modus', mode, 'mode') : '',
-      isNum(setpoint) ? this._stat('Doeltemperatuur', fmt(setpoint, 0, ' °C'), 'setpoint') : '',
+      this._has('power') ? this._stat(t.power, fmtP(power), 'power') : '',
+      this._has('energy_today') ? this._stat(t.today, fmt(this._n('energy_today'), 2, ' kWh'), 'energy_today') : '',
+      this._has('energy_month') ? this._stat(t.month, fmt(this._n('energy_month'), 1, ' kWh'), 'energy_month') : '',
+      this._has('energy_total') ? this._stat(t.total, fmt(et, isNum(et) && et < 100 ? 2 : 0, ' kWh'), 'energy_total') : '',
+      this._has('cop') ? this._stat(t.cop, fmt(this._n('cop'), 2), 'cop') : '',
+      this._has('available_liters') ? this._stat(t.available, fmt(this._n('available_liters'), 0, ' L'), 'available_liters') : '',
+      this._has('remaining_minutes') ? this._stat(t.remaining, fmtMin(this._n('remaining_minutes'), t.hr), 'remaining_minutes') : '',
+      this._has('coil') ? this._stat(t.coil, fmt(this._n('coil'), 0, ' °C'), 'coil') : '',
+      this._has('return_gas') ? this._stat(t.suction, fmt(this._n('return_gas'), 0, ' °C'), 'return_gas') : '',
+      this._has('exhaust') ? this._stat(t.discharge, fmt(this._n('exhaust'), 0, ' °C'), 'exhaust') : '',
+      this._has('eev') ? this._stat(t.valve, fmt(this._n('eev'), 0, ' P'), 'eev') : '',
+      this._has('runtime_defrost') ? this._stat(t.untilDefrost, fmtMin(this._n('runtime_defrost'), t.hr), 'runtime_defrost') : '',
+      mode ? this._stat(t.mode, mode, 'mode') : '',
+      isNum(setpoint) ? this._stat(t.target, fmt(setpoint, 0, ' °C'), 'setpoint') : '',
     ].join('');
 
     let pill;
-    if (fault) pill = { text: 'Storing', cls: 'fault' };
-    else if (defrost) pill = { text: 'Ontdooien', cls: '' };
-    else if (hp && heater) pill = { text: 'Verwarmen · warmtepomp + element' };
-    else if (hp) pill = { text: 'Verwarmen · warmtepomp' };
-    else if (heater) pill = { text: 'Verwarmen · element' };
-    else if (isNum(top) && isNum(setpoint) && top >= setpoint - 1) pill = { text: 'Op temperatuur', cls: 'idle' };
-    else pill = { text: 'Stand-by', cls: 'idle' };
+    if (fault) pill = { text: t.pillFault, cls: 'fault' };
+    else if (defrost) pill = { text: t.pillDefrost, cls: '' };
+    else if (hp && heater) pill = { text: t.pillBoth };
+    else if (hp) pill = { text: t.pillHp };
+    else if (heater) pill = { text: t.pillEl };
+    else if (isNum(top) && isNum(setpoint) && top >= setpoint - 1) pill = { text: t.pillOk, cls: 'idle' };
+    else pill = { text: t.pillIdle, cls: 'idle' };
 
     /* view: full = tekening + details | drawing = alleen tekening | details = alleen chips, Smart Grid en waarden
        layout (bij view full): auto = naast elkaar zodra de kaart breed genoeg is | vertical | horizontal */
@@ -393,14 +416,14 @@ class AtlanticExplorerCard extends WPBase {
     const body = view === 'drawing' ? svg
       : view === 'details' ? info
       : `<div class="wrap ${layout}"><div class="draw">${svg}</div><div class="info">${info}</div></div>`;
-    this._shell(c.title, pill, body);
+    this._shell(c.title || (view === 'details' ? t.detailsTitle : t.title), pill, body);
   }
 }
 
 
 /* Losse kaart met alleen de details (chips, Smart Grid en waarden), voor bijvoorbeeld een liggend scherm */
 class AtlanticExplorerDetailsCard extends AtlanticExplorerCard {
-  static defaults() { return { ...AtlanticExplorerCard.defaults(), view: 'details', title: 'Boiler details' }; }
+  static defaults() { return { ...AtlanticExplorerCard.defaults(), view: 'details' }; }
   getCardSize() { return 4; }
 }
 
