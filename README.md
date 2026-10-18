@@ -101,6 +101,13 @@ entities:
 
 ## Liggend scherm of losse kaarten
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-horizontal-dark.gif">
+    <img src="images/boiler-horizontal-light.gif" alt="Liggend op een breed scherm" width="760">
+  </picture>
+</p>
+
 Op een breed of liggend scherm staat de tekening vanzelf links en staan de status, Smart Grid en de waarden rechts ernaast, zodra de kaart ongeveer 660 pixels breed is. Je kunt dat ook zelf kiezen, of de kaart in tweeën splitsen:
 
 | Optie | Waarden | Standaard | Wat het doet |
@@ -120,6 +127,13 @@ cards:
     entities: { ... }
 ```
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-details-dark.png">
+    <img src="images/boiler-details-light.png" alt="Alleen de details" width="560">
+  </picture>
+</p>
+
 `atlantic-explorer-details-card` is gewoon een kaart met `view: details`. Gebruik in beide kaarten dezelfde `entities`, bijvoorbeeld met een YAML-anker of door de lijst te kopiëren.
 
 ## Smart Grid en PV Boost bedienen
@@ -127,6 +141,13 @@ cards:
 De Explorer heeft twee functies die dezelfde ingang gebruiken. Op de boiler zelf stel je in of ingang **I1** werkt als **PV Boost** (boost op zonne-energie) of als onderdeel van **Smart Grid**. De kaart kan niet uitlezen welke van de twee is ingesteld, dus geef je dat op met `grid_mode`.
 
 ### Smart Grid (`grid_mode: smart_grid`)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-dark.gif">
+    <img src="images/boiler-light.gif" alt="Smart Grid" width="380">
+  </picture>
+</p>
 
 Het EMS (energiemanagementsysteem) stuurt de boiler aan via de ingangen **I1** en **I2** van de printplaat. Hangen die bij jou aan twee losse schakelaars, dan bedien je ze met de kaart. Zet de schakelaar van I1 bij `pv_boost` (of bij `sg_1`) en de schakelaar van I2 bij `sg_2`. Onder de chips verschijnt dan een blok **Smart Grid** met vier knoppen:
 
@@ -138,6 +159,13 @@ Het EMS (energiemanagementsysteem) stuurt de boiler aan via de ingangen **I1** e
 | Vol vermogen | 1 | 1 | 1:1 | Inschakelen op vol vermogen (geforceerd aan) |
 
 ### PV Boost (`grid_mode: pv_boost`)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-pvboost-dark.gif">
+    <img src="images/boiler-pvboost-light.gif" alt="PV Boost" width="380">
+  </picture>
+</p>
 
 Dan telt alleen I1. De kaart toont een blok **PV Boost** met de knoppen Uit en Aan, en `sg_2` wordt genegeerd.
 

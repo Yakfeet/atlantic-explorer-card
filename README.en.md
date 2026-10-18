@@ -101,6 +101,13 @@ entities:
 
 ## Landscape screens and separate cards
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-horizontal-dark.gif">
+    <img src="images/boiler-horizontal-light.gif" alt="Landscape on a wide screen" width="760">
+  </picture>
+</p>
+
 On a wide or landscape screen the drawing automatically sits on the left, with the status, Smart Grid and values next to it, as soon as the card is about 660 pixels wide. You can also choose this yourself, or split the card in two:
 
 | Option | Values | Default | What it does |
@@ -120,6 +127,13 @@ cards:
     entities: { ... }
 ```
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-details-dark.png">
+    <img src="images/boiler-details-light.png" alt="Details only" width="560">
+  </picture>
+</p>
+
 `atlantic-explorer-details-card` is simply a card with `view: details`. Use the same `entities` in both cards, for example by copying the list.
 
 ## Controlling Smart Grid and PV Boost
@@ -127,6 +141,13 @@ cards:
 The Explorer has two functions that share the same input. On the water heater itself you choose whether input **I1** works as **PV Boost** (boost on solar power) or as part of **Smart Grid**. The card cannot read which of the two is set, so you tell it with `grid_mode`.
 
 ### Smart Grid (`grid_mode: smart_grid`)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-dark.gif">
+    <img src="images/boiler-light.gif" alt="Smart Grid" width="380">
+  </picture>
+</p>
 
 The EMS (energy management system) controls the water heater through inputs **I1** and **I2** on the circuit board. If those are wired to two separate switches in your setup, you operate them from the card. Put the switch of I1 under `pv_boost` (or `sg_1`) and the switch of I2 under `sg_2`. A **Smart Grid** block with four buttons then appears below the chips:
 
@@ -138,6 +159,13 @@ The EMS (energy management system) controls the water heater through inputs **I1
 | Vol vermogen | 1 | 1 | 1:1 | Switch on at full power (forced on) |
 
 ### PV Boost (`grid_mode: pv_boost`)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/boiler-pvboost-dark.gif">
+    <img src="images/boiler-pvboost-light.gif" alt="PV Boost" width="380">
+  </picture>
+</p>
 
 Only I1 counts then. The card shows a **PV Boost** block with the buttons Uit and Aan, and `sg_2` is ignored.
 
