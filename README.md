@@ -65,6 +65,7 @@ entities:
 | Optie | Omschrijving | Standaard |
 | --- | --- | --- |
 | `title` | Titel van de kaart | naar taal (`Warmtepompboiler` / `Heat pump water heater`) |
+| `labels` | Eigen teksten voor de kaart, zie Taal | – |
 | `language` | Taal van de kaart: `nl` of `en`. Standaard de taal van Home Assistant | automatisch |
 | `min_temp` | Temperatuur die als "koud" geldt (kleur en percentage) | `15` |
 | `max_temp` | Temperatuur die als "heet" geldt | `60` |
@@ -174,6 +175,19 @@ Dan telt alleen I1. De kaart toont een blok **PV Boost** met de knoppen Uit en A
 ### Taal
 
 De kaart gebruikt automatisch de taal van je Home Assistant, ook voor de getalnotatie (komma of punt). Er zijn **Nederlands** en **Engels**; elke andere taal valt terug op Engels. Wil je een andere taal dan Home Assistant gebruikt, zet dan `language: nl` of `language: en` in de kaart.
+
+**Eigen teksten.** Met `labels` pas je elke tekst op de kaart aan, bijvoorbeeld de chips, de tegels of de statuspil. Je hoeft alleen op te geven wat je wilt veranderen:
+
+```yaml
+type: custom:atlantic-explorer-card
+labels:
+  element: Bijverwarming
+  pillHp: Aan het opwarmen
+  modes:
+    eco: Zuinig
+```
+
+Beschikbare sleutels: `detailsTitle`, `hr`, `emsStatus`, `pvBoost`, `boostOn`, `boostOff`, `off`, `on`, `compressor`, `fan`, `element`, `defrost`, `online`, `fault`, `away`, `smartGrid`, `power`, `today`, `month`, `total`, `cop`, `available`, `remaining`, `coil`, `suction`, `discharge`, `valve`, `untilDefrost`, `mode`, `target`, `pillFault`, `pillDefrost`, `pillBoth`, `pillHp`, `pillEl`, `pillOk`, `pillIdle`, `goal`, `top`, `bottom`, `airIn`, `airOut`, `hotOut`, `coldIn`. De namen van de modi pas je aan onder `modes`, de Smart Grid-standen onder `sg` (bijvoorbeeld `'1:1': ['Vol vermogen', 'Uitleg']`).
 
 Een taal toevoegen kan in `dist/atlantic-explorer-card.js`: kopieer in de tabel `TR` bovenin het blok `en`, geef het de code van de taal (bijvoorbeeld `de`) en vertaal de teksten. Een pull request is welkom.
 

@@ -65,6 +65,7 @@ entities:
 | Option | Description | Default |
 | --- | --- | --- |
 | `title` | Card title | by language (`Warmtepompboiler` / `Heat pump water heater`) |
+| `labels` | Your own texts for the card, see Language | – |
 | `language` | Card language: `nl` or `en`. Defaults to the Home Assistant language | automatic |
 | `min_temp` | Temperature that counts as "cold" (colour and percentage) | `15` |
 | `max_temp` | Temperature that counts as "hot" | `60` |
@@ -174,6 +175,19 @@ Only I1 counts then. The card shows a **PV Boost** block with the buttons Uit an
 ### Language
 
 The card automatically uses the language of your Home Assistant, including the number format (comma or point). **Dutch** and **English** are available; any other language falls back to English. To use a different language than Home Assistant, set `language: nl` or `language: en` on the card.
+
+**Custom texts.** With `labels` you change any text on the card, for example the chips, the tiles or the status pill. You only need to give what you want to change:
+
+```yaml
+type: custom:atlantic-explorer-card
+labels:
+  element: Backup heater
+  pillHp: Warming up
+  modes:
+    eco: Economy
+```
+
+Available keys: `detailsTitle`, `hr`, `emsStatus`, `pvBoost`, `boostOn`, `boostOff`, `off`, `on`, `compressor`, `fan`, `element`, `defrost`, `online`, `fault`, `away`, `smartGrid`, `power`, `today`, `month`, `total`, `cop`, `available`, `remaining`, `coil`, `suction`, `discharge`, `valve`, `untilDefrost`, `mode`, `target`, `pillFault`, `pillDefrost`, `pillBoth`, `pillHp`, `pillEl`, `pillOk`, `pillIdle`, `goal`, `top`, `bottom`, `airIn`, `airOut`, `hotOut`, `coldIn`. Change the mode names under `modes`, and the Smart Grid states under `sg` (for example `'1:1': ['Full power', 'Description']`).
 
 You can add a language in `dist/atlantic-explorer-card.js`: copy the `en` block in the `TR` table at the top, give it the language code (for example `de`) and translate the texts. Pull requests are welcome.
 
