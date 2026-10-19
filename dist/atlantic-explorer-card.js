@@ -194,7 +194,7 @@ const EXP = {
 };
 
 class AtlanticExplorerCard extends WPBase {
-  static defaults() { return { title: '', language: '', min_temp: 15, max_temp: 60, reverse_flow: false, image: '', element_power: 800, grid_mode: '', view: 'full', layout: 'auto' }; }
+  static defaults() { return { title: '', language: '', labels: {}, min_temp: 15, max_temp: 60, reverse_flow: false, image: '', element_power: 800, grid_mode: '', view: 'full', layout: 'auto' }; }
   static getStubConfig() { return { type: 'custom:atlantic-explorer-card', entities: { tank_temp: 'sensor.explorer_midden_temp' } }; }
 
   /* Ingang I1 van de Explorer hangt aan dezelfde schakelaar als PV Boost: `sg_1`, of anders `pv_boost`.
@@ -227,7 +227,10 @@ class AtlanticExplorerCard extends WPBase {
     if (!this._hass || !this._c) return;
     const c = this._c, u = this._uid;
     const lang = String(c.language || (this._hass.locale && this._hass.locale.language) || this._hass.language || 'en').toLowerCase().slice(0, 2);
-    const t = TR[lang] || TR.en;
+    const trBase = TR[lang] || TR.en;
+    const lab = c.labels && typeof c.labels === 'object' ? c.labels : {}; /* eigen teksten: `labels:` overschrijft elke sleutel uit de TR-tabel */
+    const sub = (k) => ({ ...trBase[k], ...(lab[k] && typeof lab[k] === 'object' ? lab[k] : {}) });
+    const t = { ...trBase, ...lab, modes: sub('modes'), sg: sub('sg') };
     NUM_LOCALE = c.language ? (lang === 'nl' ? 'nl-NL' : 'en-GB') : (this._hass.locale && this._hass.locale.language) || this._hass.language || (lang === 'nl' ? 'nl-NL' : 'en-GB');
     const wh = this._st('water_heater');
     const top = this._n('tank_top') ?? this._n('tank_temp') ?? (wh ? parseFloat(wh.attributes.current_temperature) : null);
