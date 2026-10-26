@@ -384,8 +384,10 @@ class AtlanticExplorerCard extends WPBase {
       <!-- tapwater -->
       <line x1="6" y1="${hotY}" x2="${X(EXP.hot[0]) - 12}" y2="${hotY}" stroke="#e8551f" stroke-width="3" stroke-linecap="round"/>
       <text x="6" y="${hotY - 7}" class="lbl">${t.hotOut}</text>
+      ${this._has('hot_out') ? `<text x="6" y="${hotY + 17}" class="val" data-e="hot_out">${fmt(this._n('hot_out'), 1, ' °C')}</text>` : ''}
       <line x1="6" y1="${coldY}" x2="${X(EXP.cold[0]) - 12}" y2="${coldY}" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
       <text x="6" y="${coldY - 7}" class="lbl">${t.coldIn}</text>
+      ${this._has('cold_in') ? `<text x="6" y="${coldY + 17}" class="val" data-e="cold_in">${fmt(this._n('cold_in'), 1, ' °C')}</text>` : ''}
     </svg>`;
 
     const SG = t.sg;
