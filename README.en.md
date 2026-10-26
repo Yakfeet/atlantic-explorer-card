@@ -81,6 +81,8 @@ entities:
 | `water_heater` | `water_heater` entity (e.g. via Overkiz/Cozytouch). Used for temperature, target and mode when the separate sensors are missing |
 | `tank_temp` | Water temperature in the middle of the tank |
 | `tank_top` / `tank_bottom` | Top and bottom of the tank, if you have those sensors |
+| `hot_out` | Temperature of the hot water pipe (top of the boiler), shown below the "Hot water out" line |
+| `cold_in` | Temperature of the cold water supply, shown below the "Cold in" line |
 | `setpoint` | Target temperature |
 | `air_in` / `air_out` | Air temperature before and after the evaporator |
 | `coil` / `exhaust` / `return_gas` | Evaporator, discharge gas and suction gas temperature |

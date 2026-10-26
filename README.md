@@ -81,6 +81,8 @@ entities:
 | `water_heater` | `water_heater`-entiteit (bijv. via Overkiz/Cozytouch). Wordt gebruikt voor temperatuur, instelwaarde en modus als de losse sensoren ontbreken |
 | `tank_temp` | Watertemperatuur in het midden van de tank |
 | `tank_top` / `tank_bottom` | Boven- en onderkant van de tank, als je die sensoren hebt |
+| `hot_out` | Temperatuur van de warmwaterleiding (top van de boiler), wordt onder de leiding "Warm water uit" getoond |
+| `cold_in` | Temperatuur van de koudwateraanvoer, wordt onder de leiding "Koud in" getoond |
 | `setpoint` | Gewenste temperatuur |
 | `air_in` / `air_out` | Luchttemperatuur voor en na de verdamper |
 | `coil` / `exhaust` / `return_gas` | Verdamper-, persgas- en zuiggastemperatuur |
