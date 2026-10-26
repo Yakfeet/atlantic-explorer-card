@@ -234,3 +234,5 @@ De productfoto's zijn eigendom van Atlantic. Neem ze daarom niet op in een publi
 ## Licentie
 
 MIT
+
+![Validate](https://github.com/JOUWNAAM/atlantic-explorer-card/actions/workflows/validate.yml/badge.svg)
