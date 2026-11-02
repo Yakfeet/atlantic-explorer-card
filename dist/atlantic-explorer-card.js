@@ -9,6 +9,9 @@
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const isNum = (v) => v !== null && v !== undefined && !isNaN(v);
+/* HTML-escaping: alles wat niet door de kaart zelf is gemaakt (entiteitsstatussen, labels, titel, afbeelding) gaat hier doorheen voordat het in innerHTML komt */
+const esc = (v) => String(v === null || v === undefined ? '' : v).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const escDeep = (o) => (typeof o === 'string' ? esc(o) : Array.isArray(o) ? o.map(escDeep) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, escDeep(v)])) : o);
 let NUM_LOCALE = 'nl-NL'; /* wordt bij elke render gezet op de taal van Home Assistant (of `language`) */
 const fmt = (v, d = 1, u = '') =>
   isNum(v) ? Number(v).toLocaleString(NUM_LOCALE, { minimumFractionDigits: d, maximumFractionDigits: d }) + u : '–';
@@ -54,7 +57,7 @@ const TR = {
     goal: 'target', top: 'top', bottom: 'bottom', airIn: 'Air in', airOut: 'Air out', hotOut: 'Hot out', coldIn: 'Cold in',
   },
 };
-const modeText = (v, t) => (v === null || v === undefined || v === '' ? '' : t.modes[String(v).toLowerCase()] || String(v));
+const modeText = (v, t) => (v === null || v === undefined || v === '' ? '' : t.modes[String(v).toLowerCase()] || esc(v));
 const GREY = '#8b9097';
 
 /* Past de bestaande DOM aan op de nieuwe, in plaats van alles te vervangen: de elementen (en dus de animaties en de scrollpositie van het dashboard) blijven staan. */
@@ -262,7 +265,7 @@ class AtlanticExplorerCard extends WPBase {
     const trBase = TR[lang] || TR.en;
     const lab = c.labels && typeof c.labels === 'object' ? c.labels : {}; /* eigen teksten: `labels:` overschrijft elke sleutel uit de TR-tabel */
     const sub = (k) => ({ ...trBase[k], ...(lab[k] && typeof lab[k] === 'object' ? lab[k] : {}) });
-    const t = { ...trBase, ...lab, modes: sub('modes'), sg: sub('sg') };
+    const t = escDeep({ ...trBase, ...lab, modes: sub('modes'), sg: sub('sg') });
     NUM_LOCALE = c.language ? (lang === 'nl' ? 'nl-NL' : 'en-GB') : (this._hass.locale && this._hass.locale.language) || this._hass.language || (lang === 'nl' ? 'nl-NL' : 'en-GB');
     const wh = this._st('water_heater');
     const top = this._n('tank_top') ?? this._n('tank_temp') ?? (wh ? parseFloat(wh.attributes.current_temperature) : null);
@@ -307,7 +310,7 @@ class AtlanticExplorerCard extends WPBase {
     /* ---------- onderlaag: foto of tekening ---------- */
     let base;
     if (photo) {
-      base = `<image href="${c.image}" x="${IX}" y="${IY}" width="${IW}" height="${+(EXP.H * s).toFixed(1)}" preserveAspectRatio="none"/>
+      base = `<image href="${esc(c.image)}" x="${IX}" y="${IY}" width="${IW}" height="${+(EXP.H * s).toFixed(1)}" preserveAspectRatio="none"/>
         <rect x="${IX}" y="${IY}" width="${IW}" height="${+(EXP.H * s).toFixed(1)}" fill="url(#${u}t)" clip-path="url(#${u}c)" style="mix-blend-mode:color" opacity=".95" data-e="water_heater"/>
         <rect x="${IX}" y="${IY}" width="${IW}" height="${+(EXP.H * s).toFixed(1)}" fill="url(#${u}t)" clip-path="url(#${u}c)" style="mix-blend-mode:screen" opacity=".16" pointer-events="none"/>`;
     } else {
@@ -453,7 +456,7 @@ class AtlanticExplorerCard extends WPBase {
     const body = view === 'drawing' ? svg
       : view === 'details' ? info
       : `<div class="wrap ${layout}"><div class="draw">${svg}</div><div class="info">${info}</div></div>`;
-    this._shell(c.title || (view === 'details' ? t.detailsTitle : t.title), pill, body);
+    this._shell(c.title ? esc(c.title) : (view === 'details' ? t.detailsTitle : t.title), pill, body);
   }
 }
 
